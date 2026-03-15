@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Daily Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+      .arialRow td {
+        font-family: Arial, sans-serif;
+      }
+
+      .calibriRow td {
+        font-family: Calibri, sans-serif;
+      }
+
+      .georgiaRow td {
+        font-family: Georgia, serif;
+      }
+      .bookRow td {
+        font-family: "Book Antiqua", Palatino, serif;
+      }
+      body {
+        font-family: "Times New Roman", Times, serif;
+        background: #f2f2f2;
+        padding: 20px;
+      }
+
+      /* ===== TOOLBAR ===== */
+      .toolbar {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+
+      button {
+        padding: 8px 14px;
+        background: #2b6cb0;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin: 4px;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      button:hover {
+        background: #0083f6;
+      }
+
+      select,
+      input {
+        padding: 5px;
+        margin: 4px;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      /* ===== REPORT PAGE ===== */
+
+      #report {
+        background: white;
+        width: 1200px;
+        margin: auto;
+        padding: 20px;
+        border: 0.5px solid #999;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      /* ===== HEADER ===== */
+
+      .header {
+        display: flex;
+        align-items: center;
+      }
+
+      .logo {
+        width: 160px;
+      }
+
+      .headerText {
+        flex: 1;
+        text-align: center;
+      }
+
+      .headerText h1 {
+        margin: 0;
+        font-size: 40px;
+        font-weight: normal;
+        font-family: "Book Antiqua", Palatino, serif;
+      }
+
+      .headerText h2 {
+        margin: 6px 0 10px 0;
+        font-size: 28px;
+        display: inline-block;
+        border-bottom: 2px solid black;
+        padding-bottom: 3px;
+        font-weight: 800;
+        font-family: "Georgia", "Book Antiqua", serif;
+      }
+
+      /* ===== DAY DATE ROW ===== */
+
+      .dayTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 0;
+      }
+
+      .dayTable td {
+        border: 0.1px solid #000;
+        padding: 8px;
+        font-size: 24px;
+        font-weight: bold;
+        font-family: "Book Antiqua", Palatino, serif;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      /* ===== MAIN TABLE ===== */
+
+      table.main {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      table.main th,
+      table.main td {
+        border: 0.1px solid #000;
+        padding: 10px;
+        font-size: 24px;
+        vertical-align: middle;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      .main th {
+        background: #57b6ff;
+        font-weight: bold;
+      }
+      .main th {
+        text-align: center;
+        vertical-align: middle;
+      }
+      /* ===== SERIAL COLUMN ===== */
+
+      .sno {
+        width: 80px;
+        text-align: center;
+      }
+
+      /* ===== SECTION ROW ===== */
+
+      .section td {
+        text-align: center;
+        font-weight: bold;
+        font-size: 26px;
+        background: #e9e9e9;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      /* ===== DATE INPUT ===== */
+
+      #dateInput {
+        font-size: 24px;
+        width: 100%;
+        border: none;
+        outline: none;
+        text-align: center;
+        background: transparent;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      #displayDate {
+        font-size: 24px;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      /* SERIAL NUMBER COLUMN */
+
+      .sno {
+        text-align: center;
+        vertical-align: middle;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      /* TIMING COLUMN */
+
+      .main td:nth-child(3),
+      .main th:nth-child(3) {
+        text-align: center;
+        vertical-align: middle;
+      }
+      .main th:nth-child(1),
+      .main th:nth-child(2),
+      .main th:nth-child(3),
+      .main th:nth-child(4) {
+        font-family: arial, sans-serif;
+        height: 60px;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ===== TOOLBAR ===== -->
+    <div class="toolbar">
+      <button onclick="saveReport()">Save HD</button>
+      <button onclick="addRow()">Add Row (S.NO)</button>
+      <button onclick="addNormalRow()">Add Row (No S.NO)</button>
+      <button onclick="restartSerial()">Restart Serial</button>
+      <button onclick="deleteRow()">Delete Row</button>
+      <br />
+
+      <label>Background</label>
+      <input type="color" onchange="changeBg(this.value)" />
+      <label>Font Color</label>
+      <input type="color" onchange="changeFontColor(this.value)" />
+      <label>Font</label>
+      <select onchange="changeFont(this.value)">
+        <option value="Times New Roman">Times</option>
+        <option value="Arial">Arial</option>
+        <option value="Calibri">Calibri</option>
+        <option value="Georgia">Georgia</option>
+      </select>
+      <button onclick="toggleBold()">Bold</button>
+      <button onclick="toggleItalic()">Italic</button>
+      <button onclick="capitalize()">CAPS</button>
+      <button onclick="centerText()">Center</button>
+    </div>
+
+    <div id="report">
+      <!-- ===== HEADER ===== -->
+      <div class="header">
+        <img class="logo" src="img\open_minds_logo.jpg" />
+
+        <div class="headerText">
+          <h1>OPEN MINDS - A BIRLA SCHOOL KANKARBAGH</h1>
+          <h2>DAILY REPORT: Deptt of Examination</h2>
+        </div>
+      </div>
+
+      <!-- ===== DAY DATE ===== -->
+      <table class="dayTable">
+        <colgroup>
+          <col style="width: 80px" />
+          <col style="width: 550px" />
+          <col style="width: 110px" />
+          <col style="width: 90px" />
+        </colgroup>
+
+        <tr class="center">
+          <td>DAY</td>
+          <td id="dayCell"></td>
+          <td>DATE:</td>
+          <td>
+            <input id="dateInput" type="date" onchange="updateDay()" />
+            <span id="displayDate"></span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ===== MAIN TABLE ===== -->
+      <table class="main">
+        <colgroup>
+          <col style="width: 80px" />
+          <col style="width: 550px" />
+          <col style="width: 110px" />
+          <col style="width: 90px" />
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th>S.NO</th>
+            <th>DESCRIPTION</th>
+            <th>TIMING</th>
+            <th>REMARK</th>
+          </tr>
+        </thead>
+
+        <tbody id="tbody">
+          <tr class="section" contenteditable="true">
+            <td></td>
+            <td>EXAMINATION WORKS</td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr class="data-row">
+            <td class="sno">1</td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+          </tr>
+
+          <tr class="data-row">
+            <td class="sno">2</td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+          </tr>
+
+          <tr class="data-row">
+            <td class="sno">3</td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+          </tr>
+
+          <tr class="section" contenteditable="true">
+            <td></td>
+            <td>OTHER WORKS</td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr class="data-row">
+            <td class="sno">1</td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      let selectedCell = null;
+      let currentStyle = {
+        fontFamily: "Times New Roman",
+        color: "",
+        fontWeight: "",
+        fontStyle: "",
+        textTransform: "",
+        textAlign: "",
+      };
+
+      function applyCurrentStyle(row) {
+        Array.from(row.cells).forEach((cell) => {
+          if (currentStyle.fontFamily)
+            cell.style.fontFamily = currentStyle.fontFamily;
+
+          if (currentStyle.color) cell.style.color = currentStyle.color;
+
+          if (currentStyle.fontWeight)
+            cell.style.fontWeight = currentStyle.fontWeight;
+
+          if (currentStyle.fontStyle)
+            cell.style.fontStyle = currentStyle.fontStyle;
+
+          if (currentStyle.textTransform)
+            cell.style.textTransform = currentStyle.textTransform;
+
+          if (currentStyle.textAlign)
+            cell.style.textAlign = currentStyle.textAlign;
+        });
+      }
+
+      document.addEventListener("click", (e) => {
+        let cell = e.target.closest("td");
+
+        if (!cell) return;
+
+        selectedCell = cell;
+      });
+
+      const tbody = document.getElementById("tbody");
+
+      /* ---------- FIND NEXT SERIAL ---------- */
+
+      function getNextSerial(row) {
+        let serial = 0;
+
+        let current = row;
+
+        while (current) {
+          current = current.previousElementSibling;
+
+          if (!current) break;
+
+          if (current.classList.contains("section")) break;
+
+          let val = parseInt(current.cells[0].innerText);
+
+          if (!isNaN(val)) {
+            serial = val;
+            break;
+          }
+        }
+
+        return serial + 1;
+      }
+      /* ---------- ADD SERIAL ROW ---------- */
+
+      function createSerialRow(number) {
+        let tr = document.createElement("tr");
+
+        tr.className = "data-row";
+
+        tr.innerHTML = `
+<td class="sno">${number}</td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+`;
+
+        applyCurrentStyle(tr); // ⭐ APPLY CURRENT STYLE
+        return tr;
+      }
+
+      /* ---------- ADD NORMAL ROW ---------- */
+
+      function createNormalRow() {
+        let tr = document.createElement("tr");
+
+        tr.innerHTML = `
+<td></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+`;
+
+        applyCurrentStyle(tr); // ⭐ APPLY CURRENT STYLE
+        return tr;
+      }
+
+      /* ---------- TOOLBAR ADD ROW ---------- */
+
+      function addRow() {
+        let lastRow = tbody.lastElementChild;
+
+        let number = getNextSerial(lastRow);
+
+        tbody.appendChild(createSerialRow(number));
+      }
+
+      function addNormalRow() {
+        tbody.appendChild(createNormalRow());
+      }
+
+      /* ---------- DELETE ROW ---------- */
+
+      function deleteRow() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        row.remove();
+
+        restartSerial();
+      }
+      /* ---------- RESTART SERIAL ---------- */
+
+      function restartSerial() {
+        let rows = Array.from(tbody.querySelectorAll("tr"));
+        let serial = 0;
+
+        rows.forEach((row) => {
+          if (row.classList.contains("section")) {
+            serial = 0;
+            return;
+          }
+
+          let cell = row.cells[0];
+          let val = parseInt(cell.innerText);
+
+          if (!isNaN(val)) {
+            serial++;
+            cell.innerText = serial;
+          }
+        });
+      }
+      /* ---------- ENTER KEY LOGIC ---------- */
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+
+        let cell = document.activeElement;
+        if (cell.getAttribute("contenteditable") !== "true") return;
+
+        e.preventDefault();
+
+        let row = cell.parentElement;
+        let nextRow = row.nextElementSibling;
+
+        let currentNumber = parseInt(row.cells[0].innerText) || 0;
+
+        /* If next row is a section → insert before section */
+
+        if (nextRow && nextRow.classList.contains("section")) {
+          let newRow = createSerialRow(currentNumber + 1);
+
+          tbody.insertBefore(newRow, nextRow);
+
+          restartSerial();
+
+          newRow.cells[cell.cellIndex].focus();
+          return;
+        }
+
+        /* If next row exists and already numbered → jump */
+
+        if (nextRow) {
+          let nextNumber = parseInt(nextRow.cells[0].innerText);
+
+          if (!isNaN(nextNumber)) {
+            nextRow.cells[cell.cellIndex].focus();
+            return;
+          }
+
+          /* blank row → convert to numbered */
+
+          nextRow.cells[0].innerText = currentNumber + 1;
+          applyCurrentStyle(nextRow);
+          restartSerial();
+
+          nextRow.cells[cell.cellIndex].focus();
+          return;
+        }
+
+        /* If no next row → append new */
+
+        let newRow = createSerialRow(currentNumber + 1);
+
+        tbody.appendChild(newRow);
+
+        newRow.cells[cell.cellIndex].focus();
+      });
+      /* ---------- STYLE TOOLS ---------- */
+
+      function changeBg(color) {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.backgroundColor = color;
+        });
+      }
+
+      /*function changeFont(font) {
+        let rows = document.querySelectorAll(".data-row");
+
+        rows.forEach((row) => {
+          Array.from(row.cells).forEach((cell) => {
+            cell.style.fontFamily = font;
+          });
+        });
+      }*/
+
+      function changeFont(font) {
+        currentStyle.fontFamily = font;
+
+        document.querySelectorAll(".data-row").forEach((row) => {
+          applyCurrentStyle(row);
+        });
+      }
+
+      function capitalize() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          if (cell.style.textTransform === "uppercase") {
+            cell.style.textTransform = "none";
+          } else {
+            cell.style.textTransform = "uppercase";
+          }
+        });
+      }
+
+      function centerText() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          if (cell.style.textAlign === "center") {
+            cell.style.textAlign = "right";
+          } else {
+            cell.style.textAlign = "center";
+          }
+        });
+      }
+
+      /* ---------- SAVE IMAGE ---------- */
+      async function saveReport() {
+        const element = document.getElementById("report");
+
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+        });
+
+        const base64 = canvas.toDataURL("image/png").split(",")[1];
+
+        const date = document.getElementById("displayDate").innerText;
+
+        await fetch("https://daily-report-s9yq.onrender.com/save-report", {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            date: date,
+            image: base64,
+          }),
+        });
+
+        alert("Report saved to GitHub");
+      }
+      /* ---------- DATE + DAY ---------- */
+
+      function updateDay() {
+        let input = document.getElementById("dateInput").value;
+
+        if (!input) return;
+
+        let parts = input.split("-");
+
+        let yyyy = parts[0];
+        let mm = parts[1];
+        let dd = parts[2];
+
+        let indianDate = `${dd}-${mm}-${yyyy}`;
+
+        document.getElementById("displayDate").innerText = indianDate;
+
+        let days = [
+          "SUNDAY",
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+          "SATURDAY",
+        ];
+
+        let d = new Date(input);
+
+        document.getElementById("dayCell").innerText = days[d.getDay()];
+      }
+
+      /* ---------- DEFAULT TODAY ---------- */
+
+      window.onload = function () {
+        let today = new Date();
+
+        let yyyy = today.getFullYear();
+        let mm = String(today.getMonth() + 1).padStart(2, "0");
+        let dd = String(today.getDate()).padStart(2, "0");
+
+        document.getElementById("dateInput").value = `${yyyy}-${mm}-${dd}`;
+
+        updateDay();
+      };
+
+      function toggleBold() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.fontWeight =
+            cell.style.fontWeight === "bold" ? "normal" : "bold";
+        });
+      }
+
+      function toggleItalic() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.fontStyle =
+            cell.style.fontStyle === "italic" ? "normal" : "italic";
+        });
+      }
+
+      function changeFontColor(color) {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.color = color;
+        });
+      }
+
+      function loadReport(date) {
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report/main/reports/${date}.png`;
+
+        const img = new Image();
+
+        img.onload = function () {
+          document.getElementById("report").innerHTML = "";
+          document.getElementById("report").appendChild(img);
+        };
+
+        img.src = url;
+      }
+    </script>
+  </body>
+</html>
+```

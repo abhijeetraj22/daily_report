@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: daily-report-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r app/requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: GITHUB_TOKEN
+        sync: false
