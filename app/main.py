@@ -3,13 +3,6 @@ from pydantic import BaseModel
 import requests
 import os
 from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI()
-
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-REPO_OWNER = "abhijeetraj22"
-REPO_NAME = "daily_report"
-
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,6 +11,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app = FastAPI()
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+REPO_OWNER = "abhijeetraj22"
+REPO_NAME = "daily_report"
+BRANCH = "main"
 
 class Report(BaseModel):
     date: str
@@ -35,21 +34,15 @@ def save_report(data: Report):
         "Accept": "application/vnd.github+json"
     }
 
-    sha = None
-
-    r = requests.get(url, headers=headers)
-
-    if r.status_code == 200:
-        sha = r.json()["sha"]
-
     payload = {
         "message": f"Save report {data.date}",
         "content": data.image,
+        "branch": BRANCH
     }
-
-    if sha:
-        payload["sha"] = sha
 
     response = requests.put(url, headers=headers, json=payload)
 
-    return {"status": "saved"}
+    return {
+        "status": "saved",
+        "github_response": response.json()
+    }
