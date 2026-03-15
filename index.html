@@ -221,7 +221,7 @@
       <button onclick="addNormalRow()">Add Row (No S.NO)</button>
       <button onclick="restartSerial()">Restart Serial</button>
       <button onclick="deleteRow()">Delete Row</button>
-      <button onclick="editSerial()">Edit S.NO</button>
+      <button onclick="toggleEditSerial()">Edit All S.NO</button>
       <br />
 
       <label>Background</label>
@@ -746,18 +746,27 @@
         };
         img.src = url;
       }
-      function editSerial() {
-        if (!selectedCell) return;
-        let row = selectedCell.parentElement;
-  
-        if (!row.classList.contains("data-row")) return;
-        let snoCell = row.cells[0];
+
       
-        snoCell.setAttribute("contenteditable", "true");
-        snoCell.focus();
-        snoCell.addEventListener("blur", () => {
-          snoCell.removeAttribute("contenteditable");
-        }, { once: true });
+      let serialEditMode = false;
+      
+      function toggleEditSerial(){
+        let btn = event.target;
+        let serialCells = document.querySelectorAll(".data-row .sno");
+      
+        serialEditMode = !serialEditMode;
+        serialCells.forEach(cell => {
+      
+          if(serialEditMode){
+            cell.setAttribute("contenteditable","true");
+            cell.style.background="#fff3cd";
+          }
+          else{
+            cell.removeAttribute("contenteditable");
+            cell.style.background="";
+          }
+        });
+        btn.innerText = serialEditMode ? "Lock S.NO" : "Edit All S.NO";
       }
     </script>
   </body>
