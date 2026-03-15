@@ -600,24 +600,32 @@
           backgroundColor: "#ffffff",
         });
 
-        const base64 = canvas.toDataURL("image/png").split(",")[1];
+        const dataURL = canvas.toDataURL("image/png");
+        const base64 = dataURL.split(",")[1];
 
         const date = document.getElementById("displayDate").innerText;
 
+        /* ---------- SAVE TO LOCAL MACHINE ---------- */
+
+        const link = document.createElement("a");
+        link.download = `Daily_Report_${date}.png`;
+        link.href = dataURL;
+        link.click();
+
+        /* ---------- SAVE TO GITHUB VIA API ---------- */
+
         await fetch("https://daily-report-s9yq.onrender.com/save-report", {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
           },
-
           body: JSON.stringify({
             date: date,
             image: base64,
           }),
         });
 
-        alert("Report saved to GitHub");
+        alert("Report saved locally and uploaded to GitHub");
       }
       /* ---------- DATE + DAY ---------- */
 
