@@ -18,7 +18,7 @@ app.add_middleware(
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 REPO_OWNER = "abhijeetraj22"
-REPO_NAME = "daily_report"
+REPO_NAME = "daily_report_storage"
 BRANCH = "main"
 
 
