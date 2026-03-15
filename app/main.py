@@ -16,6 +16,7 @@ app.add_middleware(
 )
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
 REPO_OWNER = "abhijeetraj22"
 REPO_NAME = "daily_report"
 BRANCH = "main"
@@ -34,17 +35,16 @@ def save_report(data: Report):
     url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
 
     headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json"
     }
 
+    # Check if file exists
+    r = requests.get(url, headers=headers)
+
     sha = None
-
-    # check if file exists
-    check = requests.get(url, headers=headers)
-
-    if check.status_code == 200:
-        sha = check.json()["sha"]
+    if r.status_code == 200:
+        sha = r.json()["sha"]
 
     payload = {
         "message": f"Save report {data.date}",
@@ -58,6 +58,6 @@ def save_report(data: Report):
     response = requests.put(url, headers=headers, json=payload)
 
     return {
-        "status": response.status_code,
-        "response": response.json()
+        "github_status": response.status_code,
+        "github_response": response.json()
     }
