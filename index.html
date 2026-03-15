@@ -206,9 +206,9 @@
       table {
         border-collapse: collapse;
       }
-      #report img{
-        max-width:100%;
-        height:auto;
+      #report img {
+        max-width: 100%;
+        height: auto;
       }
     </style>
   </head>
@@ -250,7 +250,10 @@
           <h2>DAILY REPORT: Deptt of Examination</h2>
         </div>
       </div>
-      <div id="reportPreview" style="display:none;text-align:center;margin-top:20px;"></div>
+      <div
+        id="reportPreview"
+        style="display: none; text-align: center; margin-top: 20px"
+      ></div>
 
       <!-- ===== DAY DATE ===== -->
       <table class="dayTable">
@@ -466,17 +469,16 @@
       function restartSerial() {
         let rows = Array.from(tbody.querySelectorAll("tr"));
         let serial = 0;
-      
+
         rows.forEach((row) => {
-      
           /* Reset when section row found */
           if (row.classList.contains("section")) {
             serial = 0;
             return;
           }
-      
+
           let cell = row.cells[0];
-      
+
           /* Only number rows with S.NO column */
           if (row.classList.contains("data-row")) {
             serial++;
@@ -602,6 +604,10 @@
       async function saveReport() {
         let input = document.getElementById("dateInput");
         let span = document.getElementById("displayDate");
+        let preview = document.getElementById("reportPreview");
+
+        /* hide preview before capture */
+        preview.style.display = "none";
 
         /* show formatted date before capture */
         input.style.display = "none";
@@ -620,15 +626,13 @@
 
         const date = span.innerText;
 
-        /* ---------- SAVE TO LOCAL MACHINE ---------- */
-
+        /* save locally */
         const link = document.createElement("a");
         link.download = `Daily_Report_${date}.png`;
         link.href = dataURL;
         link.click();
 
-        /* ---------- SAVE TO GITHUB VIA API ---------- */
-
+        /* upload to server */
         await fetch("https://daily-report-s9yq.onrender.com/save-report", {
           method: "POST",
           headers: {
@@ -641,7 +645,6 @@
         });
 
         /* restore UI */
-
         input.style.display = "inline";
         span.style.display = "none";
 
@@ -740,30 +743,27 @@
           preview.appendChild(img);
           preview.style.display = "block";
         };
-      
+
         img.onerror = function () {
           preview.style.display = "none";
         };
         img.src = url;
       }
 
-      
       let serialEditMode = false;
-      
-      function toggleEditSerial(){
+
+      function toggleEditSerial() {
         let btn = event.target;
         let serialCells = document.querySelectorAll(".data-row .sno");
-      
+
         serialEditMode = !serialEditMode;
-        serialCells.forEach(cell => {
-      
-          if(serialEditMode){
-            cell.setAttribute("contenteditable","true");
-            cell.style.background="#fff3cd";
-          }
-          else{
+        serialCells.forEach((cell) => {
+          if (serialEditMode) {
+            cell.setAttribute("contenteditable", "true");
+            cell.style.background = "#fff3cd";
+          } else {
             cell.removeAttribute("contenteditable");
-            cell.style.background="";
+            cell.style.background = "";
           }
         });
         btn.innerText = serialEditMode ? "Lock S.NO" : "Edit All S.NO";
@@ -771,4 +771,3 @@
     </script>
   </body>
 </html>
-```
