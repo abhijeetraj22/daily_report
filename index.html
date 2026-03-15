@@ -465,17 +465,19 @@
       function restartSerial() {
         let rows = Array.from(tbody.querySelectorAll("tr"));
         let serial = 0;
-
+      
         rows.forEach((row) => {
+      
+          /* Reset when section row found */
           if (row.classList.contains("section")) {
             serial = 0;
             return;
           }
-
+      
           let cell = row.cells[0];
-          let val = parseInt(cell.innerText);
-
-          if (!isNaN(val)) {
+      
+          /* Only number rows with S.NO column */
+          if (row.classList.contains("data-row")) {
             serial++;
             cell.innerText = serial;
           }
