@@ -206,6 +206,10 @@
       table {
         border-collapse: collapse;
       }
+      #report img{
+        max-width:100%;
+        height:auto;
+      }
     </style>
   </head>
 
@@ -719,28 +723,30 @@
       }
 
       function loadReport(date) {
-          const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png`;
-        
-          const img = new Image();
-        
-          img.onload = function () {
-            const report = document.getElementById("report");
-        
-            report.innerHTML = "";
-        
-            img.style.width = "100%";     // fit inside report
-            img.style.height = "auto";
-            img.style.border = "1px solid #999";
-        
-            report.appendChild(img);
-          };
-        
-          img.onerror = function () {
-            console.log("No report found for this date");
-          };
-        
-          img.src = url;
-        }
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png`;
+      
+        const img = new Image();
+      
+        img.onload = function () {
+          const report = document.getElementById("report");
+      
+          report.innerHTML = "";
+      
+          img.style.maxWidth = "100%";   // fit inside report container
+          img.style.width = "100%";
+          img.style.height = "auto";
+          img.style.display = "block";
+          img.style.margin = "0 auto";
+      
+          report.appendChild(img);
+        };
+      
+        img.onerror = function () {
+          console.log("No report found for this date");
+        };
+      
+        img.src = url;
+      }
     </script>
   </body>
 </html>
