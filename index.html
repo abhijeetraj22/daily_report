@@ -650,7 +650,9 @@
 
         alert("Report saved locally and uploaded to GitHub");
         /* reload preview with latest image */
-        loadReport(date);
+        setTimeout(() => {
+          loadReport(date);
+        }, 2000);
       }
       /* ---------- DATE + DAY ---------- */
 
@@ -731,24 +733,36 @@
         });
       }
 
-      function loadReport(date) {
-        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png?t=${Date.now()}`;
+      function loadReport(date, retry = 0) {
         const preview = document.getElementById("reportPreview");
+
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png?nocache=${Date.now()}`;
+
         const img = new Image();
 
         img.onload = function () {
           preview.innerHTML = "";
+
           img.style.maxWidth = "1200px";
           img.style.width = "100%";
           img.style.height = "auto";
           img.style.border = "1px solid #999";
+
           preview.appendChild(img);
+
           preview.style.display = "block";
         };
 
         img.onerror = function () {
-          preview.style.display = "none";
+          if (retry < 5) {
+            setTimeout(() => {
+              loadReport(date, retry + 1);
+            }, 1500);
+          } else {
+            preview.style.display = "none";
+          }
         };
+
         img.src = url;
       }
 
