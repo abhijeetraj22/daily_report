@@ -593,17 +593,25 @@
 
       /* ---------- SAVE IMAGE ---------- */
       async function saveReport() {
+        let input = document.getElementById("dateInput");
+        let span = document.getElementById("displayDate");
+
+        /* show formatted date before capture */
+        input.style.display = "none";
+        span.style.display = "inline";
+
         const element = document.getElementById("report");
 
         const canvas = await html2canvas(element, {
           scale: 2,
           backgroundColor: "#ffffff",
+          useCORS: true,
         });
 
-        const dataURL = canvas.toDataURL("image/png");
+        const dataURL = canvas.toDataURL("image/png", 1);
         const base64 = dataURL.split(",")[1];
 
-        const date = document.getElementById("displayDate").innerText;
+        const date = span.innerText;
 
         /* ---------- SAVE TO LOCAL MACHINE ---------- */
 
@@ -624,6 +632,11 @@
             image: base64,
           }),
         });
+
+        /* restore UI */
+
+        input.style.display = "inline";
+        span.style.display = "none";
 
         alert("Report saved locally and uploaded to GitHub");
       }
