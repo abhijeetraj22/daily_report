@@ -249,6 +249,7 @@
           <h2>DAILY REPORT: Deptt of Examination</h2>
         </div>
       </div>
+      <div id="reportPreview" style="display:none;text-align:center;margin-top:20px;"></div>
 
       <!-- ===== DAY DATE ===== -->
       <table class="dayTable">
@@ -723,29 +724,36 @@
       }
 
       function loadReport(date) {
-        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png`;
+      
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report/main/reports/${date}.png`;
+      
+        const preview = document.getElementById("reportPreview");
       
         const img = new Image();
       
         img.onload = function () {
-          const report = document.getElementById("report");
       
-          report.innerHTML = "";
+          preview.innerHTML = "";
       
-          img.style.maxWidth = "100%";   // fit inside report container
+          img.style.maxWidth = "1200px";
           img.style.width = "100%";
           img.style.height = "auto";
-          img.style.display = "block";
-          img.style.margin = "0 auto";
+          img.style.border = "1px solid #999";
       
-          report.appendChild(img);
+          preview.appendChild(img);
+      
+          preview.style.display = "block";
+      
         };
       
         img.onerror = function () {
-          console.log("No report found for this date");
+      
+          preview.style.display = "none";
+      
         };
       
         img.src = url;
+      
       }
     </script>
   </body>
