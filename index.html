@@ -340,437 +340,435 @@
     </div>
 
     <script>
-            let selectedCell = null;
-            let currentStyle = {
-              fontFamily: "Times New Roman",
-              color: "",
-              fontWeight: "",
-              fontStyle: "",
-              textTransform: "",
-              textAlign: "",
-            };
+      let selectedCell = null;
+      let currentStyle = {
+        fontFamily: "Times New Roman",
+        color: "",
+        fontWeight: "",
+        fontStyle: "",
+        textTransform: "",
+        textAlign: "",
+      };
 
-            function applyCurrentStyle(row) {
-              Array.from(row.cells).forEach((cell) => {
-                if (currentStyle.fontFamily)
-                  cell.style.fontFamily = currentStyle.fontFamily;
+      function applyCurrentStyle(row) {
+        Array.from(row.cells).forEach((cell) => {
+          if (currentStyle.fontFamily)
+            cell.style.fontFamily = currentStyle.fontFamily;
 
-                if (currentStyle.color) cell.style.color = currentStyle.color;
+          if (currentStyle.color) cell.style.color = currentStyle.color;
 
-                if (currentStyle.fontWeight)
-                  cell.style.fontWeight = currentStyle.fontWeight;
+          if (currentStyle.fontWeight)
+            cell.style.fontWeight = currentStyle.fontWeight;
 
-                if (currentStyle.fontStyle)
-                  cell.style.fontStyle = currentStyle.fontStyle;
+          if (currentStyle.fontStyle)
+            cell.style.fontStyle = currentStyle.fontStyle;
 
-                if (currentStyle.textTransform)
-                  cell.style.textTransform = currentStyle.textTransform;
+          if (currentStyle.textTransform)
+            cell.style.textTransform = currentStyle.textTransform;
 
-                if (currentStyle.textAlign)
-                  cell.style.textAlign = currentStyle.textAlign;
-              });
-            }
+          if (currentStyle.textAlign)
+            cell.style.textAlign = currentStyle.textAlign;
+        });
+      }
 
-            document.addEventListener("click", (e) => {
-              let cell = e.target.closest("td");
+      document.addEventListener("click", (e) => {
+        let cell = e.target.closest("td");
 
-              if (!cell) return;
+        if (!cell) return;
 
-              selectedCell = cell;
-            });
+        selectedCell = cell;
+      });
 
-            const tbody = document.getElementById("tbody");
+      const tbody = document.getElementById("tbody");
 
-            /* ---------- FIND NEXT SERIAL ---------- */
+      /* ---------- FIND NEXT SERIAL ---------- */
 
-            function getNextSerial(row) {
-              let serial = 0;
+      function getNextSerial(row) {
+        let serial = 0;
 
-              let current = row;
+        let current = row;
 
-              while (current) {
-                current = current.previousElementSibling;
+        while (current) {
+          current = current.previousElementSibling;
 
-                if (!current) break;
+          if (!current) break;
 
-                if (current.classList.contains("section")) break;
+          if (current.classList.contains("section")) break;
 
-                let val = parseInt(current.cells[0].innerText);
+          let val = parseInt(current.cells[0].innerText);
 
-                if (!isNaN(val)) {
-                  serial = val;
-                  break;
-                }
-              }
+          if (!isNaN(val)) {
+            serial = val;
+            break;
+          }
+        }
 
-              return serial + 1;
-            }
-            /* ---------- ADD SERIAL ROW ---------- */
+        return serial + 1;
+      }
+      /* ---------- ADD SERIAL ROW ---------- */
 
-            function createSerialRow(number) {
-              let tr = document.createElement("tr");
+      function createSerialRow(number) {
+        let tr = document.createElement("tr");
 
-              tr.className = "data-row";
+        tr.className = "data-row";
 
-              tr.innerHTML = `
-      <td class="sno">${number}</td>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-      `;
+        tr.innerHTML = `
+<td class="sno">${number}</td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+`;
 
-              applyCurrentStyle(tr); // ⭐ APPLY CURRENT STYLE
-              return tr;
-            }
+        applyCurrentStyle(tr); // ⭐ APPLY CURRENT STYLE
+        return tr;
+      }
 
-            /* ---------- ADD NORMAL ROW ---------- */
+      /* ---------- ADD NORMAL ROW ---------- */
 
-            function createNormalRow() {
-              let tr = document.createElement("tr");
+      function createNormalRow() {
+        let tr = document.createElement("tr");
 
-              tr.innerHTML = `
-      <td></td>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-      `;
+        tr.innerHTML = `
+<td></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+`;
 
-              applyCurrentStyle(tr); // ⭐ APPLY CURRENT STYLE
-              return tr;
-            }
+        applyCurrentStyle(tr); // ⭐ APPLY CURRENT STYLE
+        return tr;
+      }
 
-            /* ---------- TOOLBAR ADD ROW ---------- */
+      /* ---------- TOOLBAR ADD ROW ---------- */
 
-            function addRow() {
-              let lastRow = tbody.lastElementChild;
+      function addRow() {
+        let lastRow = tbody.lastElementChild;
 
-              let number = getNextSerial(lastRow);
+        let number = getNextSerial(lastRow);
 
-              tbody.appendChild(createSerialRow(number));
-            }
+        tbody.appendChild(createSerialRow(number));
+      }
 
-            function addNormalRow() {
-              tbody.appendChild(createNormalRow());
-            }
+      function addNormalRow() {
+        tbody.appendChild(createNormalRow());
+      }
 
-            /* ---------- DELETE ROW ---------- */
+      /* ---------- DELETE ROW ---------- */
 
-            function deleteRow() {
-              if (!selectedCell) return;
+      function deleteRow() {
+        if (!selectedCell) return;
 
-              let row = selectedCell.parentElement;
+        let row = selectedCell.parentElement;
 
-              row.remove();
+        row.remove();
 
-              restartSerial();
-            }
-            /* ---------- RESTART SERIAL ---------- */
+        restartSerial();
+      }
+      /* ---------- RESTART SERIAL ---------- */
 
-            function restartSerial() {
-              let rows = Array.from(tbody.querySelectorAll("tr"));
-              let serial = 0;
+      function restartSerial() {
+        let rows = Array.from(tbody.querySelectorAll("tr"));
+        let serial = 0;
 
-              rows.forEach((row) => {
-                /* Reset when section row found */
-                if (row.classList.contains("section")) {
-                  serial = 0;
-                  return;
-                }
-
-                let cell = row.cells[0];
-
-                /* Only number rows with S.NO column */
-                if (row.classList.contains("data-row")) {
-                  serial++;
-                  cell.innerText = serial;
-                }
-              });
-            }
-            /* ---------- ENTER KEY LOGIC ---------- */
-
-            document.addEventListener("keydown", (e) => {
-              if (e.key !== "Enter") return;
-
-              let cell = document.activeElement;
-              if (cell.getAttribute("contenteditable") !== "true") return;
-
-              e.preventDefault();
-
-              let row = cell.parentElement;
-              let nextRow = row.nextElementSibling;
-
-              let currentNumber = parseInt(row.cells[0].innerText) || 0;
-
-              /* If next row is a section → insert before section */
-
-              if (nextRow && nextRow.classList.contains("section")) {
-                let newRow = createSerialRow(currentNumber + 1);
-
-                tbody.insertBefore(newRow, nextRow);
-
-                restartSerial();
-
-                newRow.cells[cell.cellIndex].focus();
-                return;
-              }
-
-              /* If next row exists and already numbered → jump */
-
-              if (nextRow) {
-                let nextNumber = parseInt(nextRow.cells[0].innerText);
-
-                if (!isNaN(nextNumber)) {
-                  nextRow.cells[cell.cellIndex].focus();
-                  return;
-                }
-
-                /* blank row → convert to numbered */
-
-                nextRow.cells[0].innerText = currentNumber + 1;
-                applyCurrentStyle(nextRow);
-                restartSerial();
-
-                nextRow.cells[cell.cellIndex].focus();
-                return;
-              }
-
-              /* If no next row → append new */
-
-              let newRow = createSerialRow(currentNumber + 1);
-
-              tbody.appendChild(newRow);
-
-              newRow.cells[cell.cellIndex].focus();
-            });
-            /* ---------- STYLE TOOLS ---------- */
-
-            function changeBg(color) {
-              if (!selectedCell) return;
-
-              let row = selectedCell.parentElement;
-
-              Array.from(row.cells).forEach((cell) => {
-                cell.style.backgroundColor = color;
-              });
-            }
-
-            /*function changeFont(font) {
-              let rows = document.querySelectorAll(".data-row");
-
-              rows.forEach((row) => {
-                Array.from(row.cells).forEach((cell) => {
-                  cell.style.fontFamily = font;
-                });
-              });
-            }*/
-
-            function changeFont(font) {
-              currentStyle.fontFamily = font;
-
-              document.querySelectorAll(".data-row").forEach((row) => {
-                applyCurrentStyle(row);
-              });
-            }
-
-            function capitalize() {
-              if (!selectedCell) return;
-
-              let row = selectedCell.parentElement;
-
-              Array.from(row.cells).forEach((cell) => {
-                if (cell.style.textTransform === "uppercase") {
-                  cell.style.textTransform = "none";
-                } else {
-                  cell.style.textTransform = "uppercase";
-                }
-              });
-            }
-
-            function centerText() {
-              if (!selectedCell) return;
-
-              let row = selectedCell.parentElement;
-
-              Array.from(row.cells).forEach((cell) => {
-                if (cell.style.textAlign === "center") {
-                  cell.style.textAlign = "right";
-                } else {
-                  cell.style.textAlign = "center";
-                }
-              });
-            }
-
-            /* ---------- SAVE IMAGE ---------- */
-            async function saveReport() {
-              let input = document.getElementById("dateInput");
-              let span = document.getElementById("displayDate");
-              let preview = document.getElementById("reportPreview");
-
-              /* hide preview before capture */
-              preview.style.display = "none";
-
-              /* show formatted date before capture */
-              input.style.display = "none";
-              span.style.display = "inline";
-
-              const element = document.getElementById("report");
-
-              const canvas = await html2canvas(element, {
-                scale: 2,
-                backgroundColor: "#ffffff",
-                useCORS: true,
-              });
-
-              const dataURL = canvas.toDataURL("image/png", 1);
-              const base64 = dataURL.split(",")[1];
-
-              const date = span.innerText;
-
-              /* save locally */
-              const link = document.createElement("a");
-              link.download = `Daily_Report_${date}.png`;
-              link.href = dataURL;
-              link.click();
-
-              /* upload to server */
-              await fetch("https://daily-report-s9yq.onrender.com/save-report", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  date: date,
-                  image: base64,
-                }),
-              });
-
-              /* restore UI */
-              input.style.display = "inline";
-              span.style.display = "none";
-
-              alert("Report saved locally and uploaded to GitHub");
-              /* reload preview with latest image */
-              setTimeout(() => {
-                loadReport(date);
-              }, 2000);
-            }
-            /* ---------- DATE + DAY ---------- */
-
-            function updateDay() {
-              let input = document.getElementById("dateInput").value;
-
-              if (!input) return;
-
-              let parts = input.split("-");
-
-              let yyyy = parts[0];
-              let mm = parts[1];
-              let dd = parts[2];
-
-              let indianDate = `${dd}-${mm}-${yyyy}`;
-
-              document.getElementById("displayDate").innerText = indianDate;
-
-              let days = [
-                "SUNDAY",
-                "MONDAY",
-                "TUESDAY",
-                "WEDNESDAY",
-                "THURSDAY",
-                "FRIDAY",
-                "SATURDAY",
-              ];
-
-              let d = new Date(input);
-
-              document.getElementById("dayCell").innerText = days[d.getDay()];
-              loadReport(indianDate);
-            }
-
-            /* ---------- DEFAULT TODAY ---------- */
-
-            window.onload = function () {
-              let today = new Date();
-
-              let yyyy = today.getFullYear();
-              let mm = String(today.getMonth() + 1).padStart(2, "0");
-              let dd = String(today.getDate()).padStart(2, "0");
-
-              document.getElementById("dateInput").value = `${yyyy}-${mm}-${dd}`;
-
-              updateDay();
-            };
-
-            function toggleBold() {
-              if (!selectedCell) return;
-
-              let row = selectedCell.parentElement;
-
-              Array.from(row.cells).forEach((cell) => {
-                cell.style.fontWeight =
-                  cell.style.fontWeight === "bold" ? "normal" : "bold";
-              });
-            }
-
-            function toggleItalic() {
-              if (!selectedCell) return;
-
-              let row = selectedCell.parentElement;
-
-              Array.from(row.cells).forEach((cell) => {
-                cell.style.fontStyle =
-                  cell.style.fontStyle === "italic" ? "normal" : "italic";
-              });
-            }
-
-            function changeFontColor(color) {
-              if (!selectedCell) return;
-
-              let row = selectedCell.parentElement;
-
-              Array.from(row.cells).forEach((cell) => {
-                cell.style.color = color;
-              });
-            }
-
-            function loadReport(date) {
-              const url = https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png?t=${Date.now()};
-              const preview = document.getElementById("reportPreview");
-              const img = new Image();
-              img.onload = function ()
-              {
-                preview.innerHTML = "";
-                img.style.maxWidth = "1200px";
-                img.style.width = "100%";
-                img.style.height = "auto";
-                img.style.border = "1px solid #999";
-                preview.appendChild(img);
-                preview.style.display = "block";
-            };
-            img.onerror = function () {
-              preview.style.display = "none";
-            };
-            img.src = url;
+        rows.forEach((row) => {
+          /* Reset when section row found */
+          if (row.classList.contains("section")) {
+            serial = 0;
+            return;
           }
 
-            let serialEditMode = false;
+          let cell = row.cells[0];
 
-            function toggleEditSerial() {
-              let btn = event.target;
-              let serialCells = document.querySelectorAll(".data-row .sno");
+          /* Only number rows with S.NO column */
+          if (row.classList.contains("data-row")) {
+            serial++;
+            cell.innerText = serial;
+          }
+        });
+      }
+      /* ---------- ENTER KEY LOGIC ---------- */
 
-              serialEditMode = !serialEditMode;
-              serialCells.forEach((cell) => {
-                if (serialEditMode) {
-                  cell.setAttribute("contenteditable", "true");
-                  cell.style.background = "#fff3cd";
-                } else {
-                  cell.removeAttribute("contenteditable");
-                  cell.style.background = "";
-                }
-              });
-              btn.innerText = serialEditMode ? "Lock S.NO" : "Edit All S.NO";
-            }
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+
+        let cell = document.activeElement;
+        if (cell.getAttribute("contenteditable") !== "true") return;
+
+        e.preventDefault();
+
+        let row = cell.parentElement;
+        let nextRow = row.nextElementSibling;
+
+        let currentNumber = parseInt(row.cells[0].innerText) || 0;
+
+        /* If next row is a section → insert before section */
+
+        if (nextRow && nextRow.classList.contains("section")) {
+          let newRow = createSerialRow(currentNumber + 1);
+
+          tbody.insertBefore(newRow, nextRow);
+
+          restartSerial();
+
+          newRow.cells[cell.cellIndex].focus();
+          return;
+        }
+
+        /* If next row exists and already numbered → jump */
+
+        if (nextRow) {
+          let nextNumber = parseInt(nextRow.cells[0].innerText);
+
+          if (!isNaN(nextNumber)) {
+            nextRow.cells[cell.cellIndex].focus();
+            return;
+          }
+
+          /* blank row → convert to numbered */
+
+          nextRow.cells[0].innerText = currentNumber + 1;
+          applyCurrentStyle(nextRow);
+          restartSerial();
+
+          nextRow.cells[cell.cellIndex].focus();
+          return;
+        }
+
+        /* If no next row → append new */
+
+        let newRow = createSerialRow(currentNumber + 1);
+
+        tbody.appendChild(newRow);
+
+        newRow.cells[cell.cellIndex].focus();
+      });
+      /* ---------- STYLE TOOLS ---------- */
+
+      function changeBg(color) {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.backgroundColor = color;
+        });
+      }
+
+      /*function changeFont(font) {
+        let rows = document.querySelectorAll(".data-row");
+
+        rows.forEach((row) => {
+          Array.from(row.cells).forEach((cell) => {
+            cell.style.fontFamily = font;
+          });
+        });
+      }*/
+
+      function changeFont(font) {
+        currentStyle.fontFamily = font;
+
+        document.querySelectorAll(".data-row").forEach((row) => {
+          applyCurrentStyle(row);
+        });
+      }
+
+      function capitalize() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          if (cell.style.textTransform === "uppercase") {
+            cell.style.textTransform = "none";
+          } else {
+            cell.style.textTransform = "uppercase";
+          }
+        });
+      }
+
+      function centerText() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          if (cell.style.textAlign === "center") {
+            cell.style.textAlign = "right";
+          } else {
+            cell.style.textAlign = "center";
+          }
+        });
+      }
+
+      /* ---------- SAVE IMAGE ---------- */
+      async function saveReport() {
+        let input = document.getElementById("dateInput");
+        let span = document.getElementById("displayDate");
+        let preview = document.getElementById("reportPreview");
+
+        /* hide preview before capture */
+        preview.style.display = "none";
+
+        /* show formatted date before capture */
+        input.style.display = "none";
+        span.style.display = "inline";
+
+        const element = document.getElementById("report");
+
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+        });
+
+        const dataURL = canvas.toDataURL("image/png", 1);
+        const base64 = dataURL.split(",")[1];
+
+        const date = span.innerText;
+
+        /* save locally */
+        const link = document.createElement("a");
+        link.download = `Daily_Report_${date}.png`;
+        link.href = dataURL;
+        link.click();
+
+        /* upload to server */
+        await fetch("https://daily-report-s9yq.onrender.com/save-report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: date,
+            image: base64,
+          }),
+        });
+
+        /* restore UI */
+        input.style.display = "inline";
+        span.style.display = "none";
+
+        alert("Report saved locally and uploaded to GitHub");
+      }
+      /* ---------- DATE + DAY ---------- */
+
+      function updateDay() {
+        let input = document.getElementById("dateInput").value;
+
+        if (!input) return;
+
+        let parts = input.split("-");
+
+        let yyyy = parts[0];
+        let mm = parts[1];
+        let dd = parts[2];
+
+        let indianDate = `${dd}-${mm}-${yyyy}`;
+
+        document.getElementById("displayDate").innerText = indianDate;
+
+        let days = [
+          "SUNDAY",
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+          "SATURDAY",
+        ];
+
+        let d = new Date(input);
+
+        document.getElementById("dayCell").innerText = days[d.getDay()];
+        loadReport(indianDate);
+      }
+
+      /* ---------- DEFAULT TODAY ---------- */
+
+      window.onload = function () {
+        let today = new Date();
+
+        let yyyy = today.getFullYear();
+        let mm = String(today.getMonth() + 1).padStart(2, "0");
+        let dd = String(today.getDate()).padStart(2, "0");
+
+        document.getElementById("dateInput").value = `${yyyy}-${mm}-${dd}`;
+
+        updateDay();
+      };
+
+      function toggleBold() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.fontWeight =
+            cell.style.fontWeight === "bold" ? "normal" : "bold";
+        });
+      }
+
+      function toggleItalic() {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.fontStyle =
+            cell.style.fontStyle === "italic" ? "normal" : "italic";
+        });
+      }
+
+      function changeFontColor(color) {
+        if (!selectedCell) return;
+
+        let row = selectedCell.parentElement;
+
+        Array.from(row.cells).forEach((cell) => {
+          cell.style.color = color;
+        });
+      }
+
+      function loadReport(date) {
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png?t=${Date.now()}`;
+        const preview = document.getElementById("reportPreview");
+        const img = new Image();
+
+        img.onload = function () {
+          preview.innerHTML = "";
+          img.style.maxWidth = "1200px";
+          img.style.width = "100%";
+          img.style.height = "auto";
+          img.style.border = "1px solid #999";
+          preview.appendChild(img);
+          preview.style.display = "block";
+        };
+
+        img.onerror = function () {
+          preview.style.display = "none";
+        };
+        img.src = url;
+      }
+
+      let serialEditMode = false;
+
+      function toggleEditSerial() {
+        let btn = event.target;
+        let serialCells = document.querySelectorAll(".data-row .sno");
+
+        serialEditMode = !serialEditMode;
+        serialCells.forEach((cell) => {
+          if (serialEditMode) {
+            cell.setAttribute("contenteditable", "true");
+            cell.style.background = "#fff3cd";
+          } else {
+            cell.removeAttribute("contenteditable");
+            cell.style.background = "";
+          }
+        });
+        btn.innerText = serialEditMode ? "Lock S.NO" : "Edit All S.NO";
+      }
     </script>
   </body>
 </html>
+```
