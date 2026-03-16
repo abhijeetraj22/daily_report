@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <title>Daily Report</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       .arialRow td {
-        font-family: Arial, sans-serif;
+        font-family: Arial, Helvetica, sans-serif;
       }
 
       .calibriRow td {
@@ -200,7 +200,7 @@
       .main th:nth-child(3),
       .main th:nth-child(4) {
         font-family: arial, sans-serif;
-        height: 60px;
+        height: 40px;
       }
 
       table {
@@ -209,6 +209,14 @@
       #report img {
         max-width: 100%;
         height: auto;
+      }
+
+      @media (max-width: 900px) {
+        #report {
+          width: 1200px;
+          transform: scale(0.8);
+          transform-origin: top left;
+        }
       }
     </style>
   </head>
@@ -231,7 +239,7 @@
       <label>Font</label>
       <select onchange="changeFont(this.value)">
         <option value="Times New Roman">Times</option>
-        <option value="Arial">Arial</option>
+        <option value="Arial, Helvetica, sans-serif">Arial</option>
         <option value="Calibri">Calibri</option>
         <option value="Georgia">Georgia</option>
       </select>
@@ -609,12 +617,14 @@
 
         const element = document.getElementById("report");
 
-        /* ===== SAVE IMAGE LOCALLY ONLY ===== */
-
         const canvas = await html2canvas(element, {
-          scale: 2,
+          scale: 3,
           backgroundColor: "#ffffff",
           useCORS: true,
+          width: element.scrollWidth,
+          height: element.scrollHeight,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
         });
 
         const dataURL = canvas.toDataURL("image/png", 1);
@@ -742,8 +752,7 @@
       }
 
       async function loadReport(date) {
-        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/json/${date}.json?t=${Date.now()}`;
-
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/json/${date}.json?cache=${Date.now()}`;
         try {
           const res = await fetch(url);
           if (!res.ok) throw new Error();
@@ -764,9 +773,13 @@
               tr.className = "data-row";
             }
 
-            r.cells.forEach((c) => {
+            r.cells.forEach((c, index) => {
               let td = document.createElement("td");
               td.innerText = c;
+
+              if (index === 0 && r.type === "data") {
+                td.classList.add("sno");
+              }
 
               if (r.type !== "section") {
                 td.setAttribute("contenteditable", "true");
@@ -774,11 +787,12 @@
 
               tr.appendChild(td);
             });
-
             tbody.appendChild(tr);
           });
         } catch (err) {
-          console.log("No saved report for this date");
+          console.log("No saved report");
+
+          resetDefaultTable();
         }
       }
 
@@ -799,6 +813,54 @@
           }
         });
         btn.innerText = serialEditMode ? "Lock S.NO" : "Edit All S.NO";
+      }
+
+      function resetDefaultTable() {
+        const tbody = document.getElementById("tbody");
+
+        tbody.innerHTML = `
+<tr class="section" contenteditable="true">
+<td></td>
+<td>EXAMINATION WORKS</td>
+<td></td>
+<td></td>
+</tr>
+
+<tr class="data-row">
+<td class="sno">1</td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr class="data-row">
+<td class="sno">2</td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr class="data-row">
+<td class="sno">3</td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+</tr>
+
+<tr class="section" contenteditable="true">
+<td></td>
+<td>OTHER WORKS</td>
+<td></td>
+<td></td>
+</tr>
+
+<tr class="data-row">
+<td class="sno">1</td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+<td contenteditable="true"></td>
+</tr>
+`;
       }
     </script>
   </body>
