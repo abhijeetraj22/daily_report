@@ -61,3 +61,48 @@ def save_report(data: Report):
         "github_status": response.status_code,
         "github_response": response.json()
     }
+
+
+class ReportJSON(BaseModel):
+    date: str
+    day: str
+    rows: list
+
+
+@app.post("/save-report-json")
+def save_report_json(data: ReportJSON):
+
+    file_path = f"json/{data.date}.json"
+
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
+
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json"
+    }
+
+    sha = None
+
+    r = requests.get(url, headers=headers)
+
+    if r.status_code == 200:
+        sha = r.json()["sha"]
+
+    import json
+
+    content_json = json.dumps(data.dict(), indent=2)
+
+    import base64
+    encoded = base64.b64encode(content_json.encode()).decode()
+
+    payload = {
+        "message": f"Save report JSON {data.date}",
+        "content": encoded
+    }
+
+    if sha:
+        payload["sha"] = sha
+
+    response = requests.put(url, headers=headers, json=payload)
+
+    return {"status": "json saved"}
