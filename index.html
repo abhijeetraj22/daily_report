@@ -603,16 +603,13 @@
       async function saveReport() {
         let input = document.getElementById("dateInput");
         let span = document.getElementById("displayDate");
-        let preview = document.getElementById("reportPreview");
 
-        /* hide preview before capture */
-        preview.style.display = "none";
-
-        /* show formatted date before capture */
         input.style.display = "none";
         span.style.display = "inline";
 
         const element = document.getElementById("report");
+
+        /* ===== SAVE IMAGE LOCALLY ONLY ===== */
 
         const canvas = await html2canvas(element, {
           scale: 2,
@@ -621,33 +618,49 @@
         });
 
         const dataURL = canvas.toDataURL("image/png", 1);
-        const base64 = dataURL.split(",")[1];
-
         const date = span.innerText;
 
-        /* save locally */
         const link = document.createElement("a");
         link.download = `Daily_Report_${date}.png`;
         link.href = dataURL;
         link.click();
 
-        /* upload to server */
-        await fetch("https://daily-report-s9yq.onrender.com/save-report", {
+        /* ===== COLLECT TABLE DATA ===== */
+
+        let rows = [];
+        document.querySelectorAll("#tbody tr").forEach((row) => {
+          let rowData = {
+            type: row.classList.contains("section") ? "section" : "data",
+            cells: [],
+          };
+
+          Array.from(row.cells).forEach((cell) => {
+            rowData.cells.push(cell.innerText);
+          });
+
+          rows.push(rowData);
+        });
+
+        const reportData = {
+          date: date,
+          day: document.getElementById("dayCell").innerText,
+          rows: rows,
+        };
+
+        /* ===== SAVE JSON TO SERVER ===== */
+
+        await fetch("https://daily-report-s9yq.onrender.com/save-report-json", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            date: date,
-            image: base64,
-          }),
+          body: JSON.stringify(reportData),
         });
 
-        /* restore UI */
         input.style.display = "inline";
         span.style.display = "none";
 
-        alert("Report saved locally and uploaded to GitHub");
+        alert("Report saved locally + backup saved to GitHub JSON");
       }
       /* ---------- DATE + DAY ---------- */
 
@@ -728,25 +741,45 @@
         });
       }
 
-      function loadReport(date) {
-        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/reports/${date}.png?t=${Date.now()}`;
-        const preview = document.getElementById("reportPreview");
-        const img = new Image();
+      async function loadReport(date) {
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/json/${date}.json?t=${Date.now()}`;
 
-        img.onload = function () {
-          preview.innerHTML = "";
-          img.style.maxWidth = "1200px";
-          img.style.width = "100%";
-          img.style.height = "auto";
-          img.style.border = "1px solid #999";
-          preview.appendChild(img);
-          preview.style.display = "block";
-        };
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error();
 
-        img.onerror = function () {
-          preview.style.display = "none";
-        };
-        img.src = url;
+          const data = await res.json();
+
+          document.getElementById("dayCell").innerText = data.day;
+
+          const tbody = document.getElementById("tbody");
+          tbody.innerHTML = "";
+
+          data.rows.forEach((r) => {
+            let tr = document.createElement("tr");
+
+            if (r.type === "section") {
+              tr.className = "section";
+            } else {
+              tr.className = "data-row";
+            }
+
+            r.cells.forEach((c) => {
+              let td = document.createElement("td");
+              td.innerText = c;
+
+              if (r.type !== "section") {
+                td.setAttribute("contenteditable", "true");
+              }
+
+              tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.log("No saved report for this date");
+        }
       }
 
       let serialEditMode = false;
