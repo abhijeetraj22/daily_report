@@ -2,11 +2,13 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import requests
 import os
+import json
+import base64
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Enable CORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,6 +24,7 @@ REPO_NAME = "daily_report_storage"
 BRANCH = "main"
 
 
+# ---------- IMAGE SAVE ----------
 class Report(BaseModel):
     date: str
     image: str
@@ -39,7 +42,6 @@ def save_report(data: Report):
         "Accept": "application/vnd.github+json"
     }
 
-    # Check if file exists
     r = requests.get(url, headers=headers)
 
     sha = None
@@ -63,6 +65,7 @@ def save_report(data: Report):
     }
 
 
+# ---------- JSON SAVE ----------
 class ReportJSON(BaseModel):
     date: str
     day: str
@@ -77,27 +80,27 @@ def save_report_json(data: ReportJSON):
     url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
 
     headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json"
     }
 
-    sha = None
-
+    # check if file exists
     r = requests.get(url, headers=headers)
 
+    sha = None
     if r.status_code == 200:
         sha = r.json()["sha"]
 
-    import json
+    # convert JSON to text
+    content_text = json.dumps(data.dict(), indent=2)
 
-    content_json = json.dumps(data.dict(), indent=2)
-
-    import base64
-    encoded = base64.b64encode(content_json.encode()).decode()
+    # encode to base64 (GitHub requirement)
+    encoded_content = base64.b64encode(content_text.encode()).decode()
 
     payload = {
         "message": f"Save report JSON {data.date}",
-        "content": encoded
+        "content": encoded_content,
+        "branch": BRANCH
     }
 
     if sha:
@@ -105,4 +108,7 @@ def save_report_json(data: ReportJSON):
 
     response = requests.put(url, headers=headers, json=payload)
 
-    return {"status": "json saved"}
+    return {
+        "github_status": response.status_code,
+        "github_response": response.json()
+    }
