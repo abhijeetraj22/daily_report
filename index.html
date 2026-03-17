@@ -624,30 +624,45 @@
         /* ===== STEP 1: WAIT FOR FONT LOAD ===== */
         await document.fonts.ready;
 
-        /* ===== STEP 2: FORCE DESKTOP VIEW TEMPORARILY ===== */
-
+        /* ===== FORCE DESKTOP VIEW ===== */
         const originalTransform = element.style.transform;
         const originalWidth = element.style.width;
 
-        element.style.transform = "none"; // remove mobile scale
-        element.style.width = "1200px"; // fix width
+        element.style.transform = "none";
+        element.style.width = "1200px";
 
-        /* ALSO FIX TABLE COLUMN WIDTH ISSUE */
-        document.querySelector(".dayTable").style.tableLayout = "fixed";
+        /* FORCE BODY WIDTH */
+        document.body.style.width = "1300px";
+        document.body.style.minWidth = "1300px";
+        document.body.style.overflow = "visible";
 
-        /* ===== STEP 3: CAPTURE ===== */
+        /* FIX TABLE STRUCTURE */
+        document.querySelectorAll("table").forEach((tbl) => {
+          tbl.style.tableLayout = "fixed";
+        });
 
+        document.querySelectorAll(".main td, .main th").forEach((cell) => {
+          cell.style.width = cell.offsetWidth + "px";
+        });
+
+        /* ===== CAPTURE ===== */
         const canvas = await html2canvas(element, {
           scale: 3,
           backgroundColor: "#ffffff",
           useCORS: true,
         });
 
-        /* ===== STEP 4: RESTORE ORIGINAL VIEW ===== */
-
+        /* ===== RESTORE ===== */
         element.style.transform = originalTransform;
         element.style.width = originalWidth;
-        document.querySelector(".dayTable").style.tableLayout = "";
+
+        document.body.style.width = "";
+        document.body.style.minWidth = "";
+        document.body.style.overflow = "";
+
+        document.querySelectorAll("table").forEach((tbl) => {
+          tbl.style.tableLayout = "";
+        });
 
         const dataURL = canvas.toDataURL("image/png", 1);
         const date = span.innerText;
