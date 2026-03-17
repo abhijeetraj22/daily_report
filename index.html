@@ -232,6 +232,16 @@
   </head>
 
   <body>
+    <div id="loginPage" style="text-align: center; margin-top: 100px">
+      <h2>Enter Access Key</h2>
+      <input type="password" id="accessKey" placeholder="Enter Key" />
+      <button onclick="verifyKey()">Login</button>
+      <p id="errorMsg" style="color: red"></p>
+    </div>
+
+    <div id="mainPage" style="display: none">
+      <!-- YOUR FULL REPORT PAGE HERE -->
+    </div>
     <!-- ===== TOOLBAR ===== -->
     <div class="toolbar">
       <button onclick="saveReport()">Save HD</button>
@@ -706,6 +716,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-key": localStorage.getItem("authKey"), // store after login
           },
           body: JSON.stringify(reportData),
         });
@@ -905,6 +916,41 @@
 </tr>
 `;
       }
+
+      async function verifyKey() {
+        const key = document.getElementById("accessKey").value;
+
+        const res = await fetch(
+          "https://daily-report-s9yq.onrender.com/verify-key",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ key }),
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById("loginPage").style.display = "none";
+          document.getElementById("mainPage").style.display = "block";
+          localStorage.setItem("authKey", key);
+
+          // (optional)
+          localStorage.setItem("auth", "true");
+        } else {
+          alert("Invalid Key ❌");
+        }
+      }
+
+      window.onload = function () {
+        if (localStorage.getItem("auth") === "true") {
+          document.getElementById("loginPage").style.display = "none";
+          document.getElementById("mainPage").style.display = "block";
+        }
+      };
     </script>
   </body>
 </html>
