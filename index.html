@@ -4,10 +4,14 @@
     <meta charset="UTF-8" />
     <title>Daily Report</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Arimo&display=swap"
+      rel="stylesheet"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       .arialRow td {
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: "Arimo", Arial, Helvetica, sans-serif;
       }
 
       .calibriRow td {
@@ -199,7 +203,7 @@
       .main th:nth-child(2),
       .main th:nth-child(3),
       .main th:nth-child(4) {
-        font-family: arial, sans-serif;
+        font-family: "Arimo", Arial, Helvetica, sans-serif;
         height: 40px;
       }
 
@@ -239,7 +243,7 @@
       <label>Font</label>
       <select onchange="changeFont(this.value)">
         <option value="Times New Roman">Times</option>
-        <option value="Arial, Helvetica, sans-serif">Arial</option>
+        <option value="Arimo, Arial, Helvetica, sans-serif">Arial</option>
         <option value="Calibri">Calibri</option>
         <option value="Georgia">Georgia</option>
       </select>
@@ -617,15 +621,33 @@
 
         const element = document.getElementById("report");
 
+        /* ===== STEP 1: WAIT FOR FONT LOAD ===== */
+        await document.fonts.ready;
+
+        /* ===== STEP 2: FORCE DESKTOP VIEW TEMPORARILY ===== */
+
+        const originalTransform = element.style.transform;
+        const originalWidth = element.style.width;
+
+        element.style.transform = "none"; // remove mobile scale
+        element.style.width = "1200px"; // fix width
+
+        /* ALSO FIX TABLE COLUMN WIDTH ISSUE */
+        document.querySelector(".dayTable").style.tableLayout = "fixed";
+
+        /* ===== STEP 3: CAPTURE ===== */
+
         const canvas = await html2canvas(element, {
           scale: 3,
           backgroundColor: "#ffffff",
           useCORS: true,
-          width: element.scrollWidth,
-          height: element.scrollHeight,
-          windowWidth: element.scrollWidth,
-          windowHeight: element.scrollHeight,
         });
+
+        /* ===== STEP 4: RESTORE ORIGINAL VIEW ===== */
+
+        element.style.transform = originalTransform;
+        element.style.width = originalWidth;
+        document.querySelector(".dayTable").style.tableLayout = "";
 
         const dataURL = canvas.toDataURL("image/png", 1);
         const date = span.innerText;
