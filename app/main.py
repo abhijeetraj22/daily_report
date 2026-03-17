@@ -73,34 +73,37 @@ class ReportJSON(BaseModel):
 
 
 @app.post("/save-report-json")
-def save_report_json(data: ReportJSON):
+def save_report_json(data: ReportJSON, x_key: str = Header(None)):
+
+    if x_key != os.getenv("SECRET_KEY"):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
     file_path = f"json/{data.date}.json"
 
     url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
 
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json"
     }
 
-    # check if file exists
+    sha = None
+
     r = requests.get(url, headers=headers)
 
-    sha = None
     if r.status_code == 200:
         sha = r.json()["sha"]
 
-    # convert JSON to text
-    content_text = json.dumps(data.dict(), indent=2)
+    import json
 
-    # encode to base64 (GitHub requirement)
-    encoded_content = base64.b64encode(content_text.encode()).decode()
+    content_json = json.dumps(data.dict(), indent=2)
+
+    import base64
+    encoded = base64.b64encode(content_json.encode()).decode()
 
     payload = {
         "message": f"Save report JSON {data.date}",
-        "content": encoded_content,
-        "branch": BRANCH
+        "content": encoded
     }
 
     if sha:
@@ -108,7 +111,18 @@ def save_report_json(data: ReportJSON):
 
     response = requests.put(url, headers=headers, json=payload)
 
-    return {
-        "github_status": response.status_code,
-        "github_response": response.json()
-    }
+    return {"status": "json saved"}
+
+
+
+class KeyRequest(BaseModel):
+    key: str
+
+@app.post("/verify-key")
+def verify_key(data: KeyRequest):
+    secret = os.getenv("SECRET_KEY")
+
+    if data.key == secret:
+        return {"success": True}
+    else:
+        return {"success": False}}
