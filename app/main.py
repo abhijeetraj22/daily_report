@@ -38,7 +38,7 @@ def save_report(data: Report):
     url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
 
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json"
     }
 
@@ -73,10 +73,7 @@ class ReportJSON(BaseModel):
 
 
 @app.post("/save-report-json")
-def save_report_json(data: ReportJSON, x_key: str = Header(None)):
-
-    if x_key != os.getenv("SECRET_KEY"):
-        raise HTTPException(status_code=401, detail="Unauthorized")
+def save_report_json(data: ReportJSON):
 
     file_path = f"json/{data.date}.json"
 
@@ -113,16 +110,3 @@ def save_report_json(data: ReportJSON, x_key: str = Header(None)):
 
     return {"status": "json saved"}
 
-
-
-class KeyRequest(BaseModel):
-    key: str
-
-@app.post("/verify-key")
-def verify_key(data: KeyRequest):
-    secret = os.getenv("SECRET_KEY")
-
-    if data.key == secret:
-        return {"success": True}
-    else:
-        return {"success": False}}
