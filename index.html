@@ -8,6 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=Arimo&display=swap"
       rel="stylesheet"
     />
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       .arialRow td {
@@ -222,11 +223,52 @@
           transform-origin: top left;
         }
       }
-      #displayDate {
-        white-space: nowrap;
+      .dateBox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
-      .dayTable td:last-child {
-        white-space: nowrap;
+
+      #dateInput {
+        width: 100%;
+        text-align: center;
+      }
+
+      #displayDate {
+        font-size: 22px;
+        margin-top: 4px;
+        text-align: center;
+      }
+      .watermarkId {
+        position: absolute;
+        top: 120px; /* adjust if needed */
+        left: 92%;
+        transform: translateX(-50%);
+
+        font-size: 50px;
+        font-weight: bold;
+        color: rgba(0, 0, 0, 0.15); /* transparent effect */
+        font-family: "Book Antiqua", Palatino, serif;
+        pointer-events: none; /* cannot click */
+        user-select: none; /* cannot select */
+
+        z-index: 0;
+      }
+
+      /* Ensure report is positioned */
+      #report {
+        position: relative;
+      }
+      .dayTable {
+        position: relative;
+        z-index: 1;
+      }
+      @media (max-width: 900px) {
+        .watermarkId {
+          font-size: 50px;
+          top: 100px;
+        }
       }
     </style>
   </head>
@@ -263,6 +305,7 @@
       style="display: none; text-align: center; margin-top: 20px"
     ></div>
     <div id="report">
+      <div class="watermarkId">5793</div>
       <!-- ===== HEADER ===== -->
       <div class="header">
         <img class="logo" src="img/open_minds_logo.jpg" />
@@ -286,8 +329,10 @@
           <td id="dayCell"></td>
           <td>DATE:</td>
           <td>
-            <input id="dateInput" type="date" onchange="updateDay()" />
-            <span id="displayDate"></span>
+            <div class="dateBox">
+              <input id="dateInput" type="date" onchange="updateDay()" />
+              <div id="displayDate"></div>
+            </div>
           </td>
         </tr>
       </table>
