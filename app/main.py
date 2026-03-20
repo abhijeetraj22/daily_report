@@ -110,3 +110,18 @@ def save_report_json(data: ReportJSON):
 
     return {"status": "json saved"}
 
+class CodeCheck(BaseModel):
+    code: str
+
+
+@app.post("/verify-code")
+def verify_code(data: CodeCheck):
+
+    # Secure code stored in Render ENV
+    SECRET_CODE = os.getenv("SECRET_KEY")
+
+    if data.code == SECRET_CODE:
+        return {"status": "success"}
+    else:
+        return {"status": "fail"}
+
