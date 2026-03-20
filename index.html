@@ -32,30 +32,55 @@
       }
 
       /* ===== TOOLBAR ===== */
+      /* ===== TOOLBAR IMPROVED ===== */
       .toolbar {
-        text-align: center;
-        margin-bottom: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
       }
 
+      /* ===== BUTTON STYLE ===== */
       button {
-        padding: 8px 14px;
-        background: #2b6cb0;
+        padding: 10px 16px;
+        background: linear-gradient(135deg, #2b6cb0, #0083f6);
         color: white;
         border: none;
+        border-radius: 8px;
         cursor: pointer;
-        margin: 4px;
-        font-family: "Times New Roman", Times, serif;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
       }
 
+      /* Hover Effect */
       button:hover {
-        background: #0083f6;
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
       }
 
+      /* Click Animation */
+      button:active {
+        transform: scale(0.92);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      /* ===== INPUT + SELECT STYLE ===== */
       select,
-      input {
-        padding: 5px;
-        margin: 4px;
-        font-family: "Times New Roman", Times, serif;
+      input[type="color"] {
+        padding: 6px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+      }
+
+      /* Labels spacing */
+      .toolbar label {
+        font-weight: bold;
+        margin-left: 10px;
+        align-self: center;
       }
 
       /* ===== REPORT PAGE ===== */
@@ -301,6 +326,25 @@
         color: red;
         margin-top: 10px;
       }
+
+      /* ALIGN BUTTON STATES */
+      #alignBtn {
+        font-weight: bold;
+        font-size: 16px;
+        min-width: 40px;
+        text-align: center;
+      }
+      #alignBtn.active-left {
+        background: linear-gradient(135deg, #ff7a18, #ffb347);
+      }
+
+      #alignBtn.active-center {
+        background: linear-gradient(135deg, #28a745, #5cd65c);
+      }
+
+      #alignBtn.active-right {
+        background: linear-gradient(135deg, #6f42c1, #9b6bff);
+      }
     </style>
   </head>
 
@@ -317,18 +361,19 @@
     </div>
     <!-- ===== TOOLBAR ===== -->
     <div class="toolbar">
-      <button onclick="saveReport()">Save HD</button>
-      <button onclick="addRow()">Add Row (S.NO)</button>
-      <button onclick="addNormalRow()">Add Row (No S.NO)</button>
-      <button onclick="restartSerial()">Restart Serial</button>
-      <button onclick="deleteRow()">Delete Row</button>
-      <button onclick="toggleEditSerial()">Edit All S.NO</button>
-      <br />
+      <button onclick="saveReport()">💾 Save</button>
+      <button onclick="addRow()">1➕ S.NO</button>
+      <button onclick="addNormalRow()">➕ No S.NO</button>
+      <button onclick="restartSerial()">🔄 Reset</button>
+      <button onclick="deleteRow()">❌ Delete</button>
+      <button onclick="toggleEditSerial()">✏️ Edit S.NO</button>
 
-      <label>Background</label>
+      <label>BG</label>
       <input type="color" onchange="changeBg(this.value)" />
-      <label>Font Color</label>
+
+      <label>Text</label>
       <input type="color" onchange="changeFontColor(this.value)" />
+
       <label>Font</label>
       <select onchange="changeFont(this.value)">
         <option value="Times New Roman">Times</option>
@@ -336,10 +381,11 @@
         <option value="Calibri">Calibri</option>
         <option value="Georgia">Georgia</option>
       </select>
-      <button onclick="toggleBold()">Bold</button>
-      <button onclick="toggleItalic()">Italic</button>
-      <button onclick="capitalize()">CAPS</button>
-      <button onclick="centerText()">Center</button>
+
+      <button onclick="toggleBold()">𝐁</button>
+      <button onclick="toggleItalic()">𝑰</button>
+      <button onclick="capitalize()">🔠</button>
+      <button id="alignBtn" onclick="centerText()">LEFT</button>
     </div>
     <div
       id="reportPreview"
@@ -531,6 +577,8 @@
       function createNormalRow() {
         let tr = document.createElement("tr");
 
+        tr.className = "normal-row"; // ⭐ IMPORTANT
+
         tr.innerHTML = `
 <td></td>
 <td contenteditable="true"></td>
@@ -538,7 +586,7 @@
 <td contenteditable="true"></td>
 `;
 
-        applyCurrentStyle(tr); // ⭐ APPLY CURRENT STYLE
+        applyCurrentStyle(tr);
         return tr;
       }
 
@@ -574,18 +622,19 @@
         let serial = 0;
 
         rows.forEach((row) => {
-          /* Reset when section row found */
-          if (row.classList.contains("section")) {
+          // 🔥 RESET on section OR normal row
+          if (
+            row.classList.contains("section") ||
+            row.classList.contains("normal-row")
+          ) {
             serial = 0;
             return;
           }
 
-          let cell = row.cells[0];
-
-          /* Only number rows with S.NO column */
+          // Only number serial rows
           if (row.classList.contains("data-row")) {
             serial++;
-            cell.innerText = serial;
+            row.cells[0].innerText = serial;
           }
         });
       }
@@ -604,45 +653,33 @@
 
         let currentNumber = parseInt(row.cells[0].innerText) || 0;
 
-        /* If next row is a section → insert before section */
-
+        /* ✅ CASE 1: Next is SECTION */
         if (nextRow && nextRow.classList.contains("section")) {
-          let newRow = createSerialRow(currentNumber + 1);
-
+          let newRow = createSerialRow(1); // restart
           tbody.insertBefore(newRow, nextRow);
-
           restartSerial();
-
           newRow.cells[cell.cellIndex].focus();
           return;
         }
 
-        /* If next row exists and already numbered → jump */
-
-        if (nextRow) {
-          let nextNumber = parseInt(nextRow.cells[0].innerText);
-
-          if (!isNaN(nextNumber)) {
-            nextRow.cells[cell.cellIndex].focus();
-            return;
-          }
-
-          /* blank row → convert to numbered */
-
-          nextRow.cells[0].innerText = currentNumber + 1;
-          applyCurrentStyle(nextRow);
+        /* ✅ CASE 2: Next is NORMAL ROW (YOUR REQUIREMENT) */
+        if (nextRow && nextRow.classList.contains("normal-row")) {
+          let newRow = createSerialRow(1); // 🔥 restart like section
+          tbody.insertBefore(newRow, nextRow); // insert ABOVE blank row
           restartSerial();
+          newRow.cells[cell.cellIndex].focus();
+          return;
+        }
 
+        /* ✅ CASE 3: Next is DATA ROW */
+        if (nextRow && nextRow.classList.contains("data-row")) {
           nextRow.cells[cell.cellIndex].focus();
           return;
         }
 
-        /* If no next row → append new */
-
+        /* ✅ CASE 4: No next row → continue */
         let newRow = createSerialRow(currentNumber + 1);
-
         tbody.appendChild(newRow);
-
         newRow.cells[cell.cellIndex].focus();
       });
       /* ---------- STYLE TOOLS ---------- */
@@ -692,15 +729,40 @@
       function centerText() {
         if (!selectedCell) return;
 
-        let row = selectedCell.parentElement;
+        // ✅ Get REAL alignment (important fix)
+        let currentAlign = window.getComputedStyle(selectedCell).textAlign;
 
-        Array.from(row.cells).forEach((cell) => {
-          if (cell.style.textAlign === "center") {
-            cell.style.textAlign = "right";
-          } else {
-            cell.style.textAlign = "center";
-          }
-        });
+        let nextAlign;
+
+        if (currentAlign === "left" || currentAlign === "start") {
+          nextAlign = "center";
+        } else if (currentAlign === "center") {
+          nextAlign = "right";
+        } else {
+          nextAlign = "left";
+        }
+
+        // Apply only to selected cell
+        selectedCell.style.textAlign = nextAlign;
+
+        // Update button UI
+        updateAlignButton(nextAlign);
+      }
+      function updateAlignButton(align) {
+        const btn = document.getElementById("alignBtn");
+
+        btn.classList.remove("active-left", "active-center", "active-right");
+
+        if (align === "left" || align === "start") {
+          btn.classList.add("active-left");
+          btn.innerText = "LEFT";
+        } else if (align === "center") {
+          btn.classList.add("active-center");
+          btn.innerText = "CENTER";
+        } else if (align === "right" || align === "end") {
+          btn.classList.add("active-right");
+          btn.innerText = "RIGHT";
+        }
       }
 
       /* ---------- SAVE IMAGE ---------- */
@@ -917,6 +979,9 @@
               tr.appendChild(td);
             });
             tbody.appendChild(tr);
+            setTimeout(() => {
+              lockSerialNumbers();
+            }, 50);
           });
         } catch (err) {
           console.log("No saved report");
@@ -946,7 +1011,9 @@
 
       function resetDefaultTable() {
         const tbody = document.getElementById("tbody");
-
+        setTimeout(() => {
+          lockSerialNumbers();
+        }, 50);
         tbody.innerHTML = `
 <tr class="section" contenteditable="true">
 <td></td>
@@ -1006,6 +1073,9 @@
 
         updateDay();
 
+        // 🔒 LOCK S.NO BY DEFAULT
+        lockSerialNumbers();
+
         // ✅ ENTER KEY SUPPORT
         document
           .getElementById("secureCodeInput")
@@ -1015,6 +1085,23 @@
             }
           });
       };
+
+      function lockSerialNumbers() {
+        let serialCells = document.querySelectorAll(".data-row .sno");
+
+        serialCells.forEach((cell) => {
+          cell.removeAttribute("contenteditable"); // 🔒 lock
+          cell.style.background = ""; // reset color
+        });
+
+        serialEditMode = false;
+
+        // Reset button text
+        let btn = document.querySelector(
+          'button[onclick="toggleEditSerial()"]',
+        );
+        if (btn) btn.innerText = "✏️ Edit S.NO";
+      }
 
       document.addEventListener("contextmenu", (e) => e.preventDefault());
 
