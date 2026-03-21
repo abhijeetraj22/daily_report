@@ -1062,6 +1062,9 @@
         // 🔒 Lock page before login
         document.body.style.overflow = "hidden";
 
+        // 🚀 WAKE SERVER (IMPORTANT)
+        wakeUpServer();
+
         // 📅 Date setup
         let today = new Date();
 
@@ -1134,6 +1137,17 @@
           document.body.style.overflow = "auto"; // 🔓 unlock
         } else {
           document.getElementById("errorMsg").innerText = "❌ Wrong Code!";
+        }
+      }
+
+      async function wakeUpServer() {
+        try {
+          await fetch("https://daily-report-s9yq.onrender.com/", {
+            method: "GET",
+          });
+          console.log("✅ Server wake-up ping sent");
+        } catch (e) {
+          console.log("⚠️ Wake-up failed (will retry later)");
         }
       }
     </script>
