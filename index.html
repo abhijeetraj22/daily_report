@@ -1120,7 +1120,7 @@
         const code = document.getElementById("secureCodeInput").value;
 
         const res = await fetch(
-          "https://daily-report-s9yq.onrender.com/verify-code",
+          "https://daily-report-live.onrender.com/verify-code",
           {
             method: "POST",
             headers: {
@@ -1142,7 +1142,7 @@
 
       async function wakeUpServer() {
         try {
-          await fetch("https://daily-report-s9yq.onrender.com/", {
+          await fetch("https://daily-report-live.onrender.com/", {
             method: "GET",
           });
           console.log("✅ Server wake-up ping sent");
