@@ -1,4 +1,3 @@
-```python
 from fastapi import FastAPI
 from pydantic import BaseModel
 import requests
@@ -331,4 +330,3 @@ def security_status():
         if configured_code
         else 0
     }
-```
