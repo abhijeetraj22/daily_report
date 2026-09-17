@@ -829,24 +829,50 @@
         /* ===== COLLECT TABLE DATA ===== */
 
         let rows = [];
+
         document.querySelectorAll("#tbody tr").forEach((row) => {
           let rowData = {
             type: row.classList.contains("section") ? "section" : "data",
             cells: [],
           };
 
-          Array.from(row.cells).forEach((cell) => {
-            rowData.cells.push(cell.innerText);
+          Array.from(row.cells).forEach((cell, index) => {
+            let cellText = cell.innerText || "";
+
+            // DESCRIPTION column:
+            // Save only the main description in cells[1].
+            // Bullet items are saved separately in rowData.bullets.
+            if (index === 1 && row.classList.contains("data-row")) {
+              const bullets = Array.isArray(row._bullets) ? row._bullets : [];
+
+              if (bullets.length > 0) {
+                const bulletLines = new Set(
+                  bullets.map((b) => "• " + String(b))
+                );
+
+                cellText = cellText
+                  .split("\n")
+                  .filter((line) => !bulletLines.has(line.trim()))
+                  .join("\n")
+                  .trim();
+              }
+
+              rowData.cells.push(cellText);
+            } else {
+              rowData.cells.push(cellText);
+            }
           });
+
+          // Keep the bullet array exactly as a separate JSON field.
+          // Old program does not save/display icons.
+          if (row.classList.contains("data-row")) {
+            rowData.bullets = Array.isArray(row._bullets)
+              ? row._bullets.map((b) => String(b))
+              : [];
+          }
 
           rows.push(rowData);
         });
-
-        const reportData = {
-          date: date,
-          day: document.getElementById("dayCell").innerText,
-          rows: rows,
-        };
 
         /* ===== SAVE JSON TO SERVER ===== */
 
@@ -943,91 +969,87 @@
       }
 
       async function loadReport(date) {
-          const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/json/${date}.json?cache=${Date.now()}`;
-      
-          try {
-              const res = await fetch(url);
-      
-              if (!res.ok) throw new Error();
-      
-              const data = await res.json();
-      
-              document.getElementById("dayCell").innerText = data.day;
-      
-              const tbody = document.getElementById("tbody");
-              tbody.innerHTML = "";
-      
-              data.rows.forEach((r) => {
-                  let tr = document.createElement("tr");
-      
-                  if (r.type === "section") {
-                      tr.className = "section";
-                  } else {
-                      tr.className = "data-row";
-                  }
-      
-                  r.cells.forEach((c, index) => {
-                      let td = document.createElement("td");
-      
-                      // =================================================
-                      // DESCRIPTION COLUMN — ACCESS BULLETS FROM JSON
-                      // =================================================
-                      if (index === 1 && r.type === "data") {
-      
-                          // Main description
-                          td.innerText = c;
-      
-                          // Read bullets from JSON
-                          if (Array.isArray(r.bullets) && r.bullets.length > 0) {
-      
-                              const bulletContainer = document.createElement("div");
-      
-                              bulletContainer.style.marginTop = "8px";
-      
-                              r.bullets.forEach((bulletText) => {
-      
-                                  const bullet = document.createElement("div");
-      
-                                  bullet.innerText = "• " + bulletText;
-      
-                                  bullet.style.marginLeft = "10px";
-                                  bullet.style.lineHeight = "1.3";
-      
-                                  bulletContainer.appendChild(bullet);
-                              });
-      
-                              td.appendChild(bulletContainer);
-                          }
-      
-                      } else {
-                          td.innerText = c;
-                      }
-      
-                      // S.NO formatting
-                      if (index === 0 && r.type === "data") {
-                          td.classList.add("sno");
-                      }
-      
-                      // Editable cells
-                      if (r.type !== "section") {
-                          td.setAttribute("contenteditable", "true");
-                      }
-      
-                      tr.appendChild(td);
+        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/json/${date}.json?cache=${Date.now()}`;
+
+        try {
+          const res = await fetch(url);
+
+          if (!res.ok) throw new Error();
+
+          const data = await res.json();
+
+          document.getElementById("dayCell").innerText = data.day;
+
+          const tbody = document.getElementById("tbody");
+          tbody.innerHTML = "";
+
+          data.rows.forEach((r) => {
+            let tr = document.createElement("tr");
+
+            if (r.type === "section") {
+              tr.className = "section";
+            } else {
+              tr.className = "data-row";
+
+              // Store bullets separately on the row.
+              // Icons from the JSON are intentionally ignored.
+              tr._bullets = Array.isArray(r.bullets)
+                ? r.bullets.map((b) => String(b))
+                : [];
+            }
+
+            r.cells.forEach((c, index) => {
+              let td = document.createElement("td");
+
+              if (index === 1 && r.type === "data") {
+                // Main description only.
+                td.innerText = c;
+
+                // Display bullets from JSON underneath the description.
+                if (Array.isArray(r.bullets) && r.bullets.length > 0) {
+                  const bulletContainer = document.createElement("div");
+
+                  bulletContainer.className = "json-bullet-container";
+                  bulletContainer.style.marginTop = "8px";
+
+                  r.bullets.forEach((bulletText) => {
+                    const bullet = document.createElement("div");
+
+                    bullet.className = "json-bullet-item";
+                    bullet.innerText = "• " + String(bulletText);
+                    bullet.style.marginLeft = "10px";
+                    bullet.style.lineHeight = "1.3";
+
+                    bulletContainer.appendChild(bullet);
                   });
-      
-                  tbody.appendChild(tr);
-      
-                  setTimeout(() => {
-                      lockSerialNumbers();
-                  }, 50);
-              });
-      
-          } catch (err) {
-              console.log("No saved report");
-      
-              resetDefaultTable();
-          }
+
+                  td.appendChild(bulletContainer);
+                }
+              } else {
+                td.innerText = c;
+              }
+
+              if (index === 0 && r.type === "data") {
+                td.classList.add("sno");
+              }
+
+              if (r.type !== "section") {
+                td.setAttribute("contenteditable", "true");
+              }
+
+              tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+
+            setTimeout(() => {
+              lockSerialNumbers();
+            }, 50);
+          });
+        } catch (err) {
+          console.log("No saved report");
+          resetDefaultTable();
+        }
       }
       let serialEditMode = false;
 
