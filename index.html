@@ -765,129 +765,256 @@
         }
       }
 
-      /* ---------- SAVE IMAGE ---------- */
+      /* ---------- SAVE IMAGE + JSON ---------- */
       async function saveReport() {
         let input = document.getElementById("dateInput");
         let span = document.getElementById("displayDate");
-
+      
         input.style.display = "none";
         span.style.display = "inline";
-
+      
         const element = document.getElementById("report");
-
-        /* ===== STEP 1: WAIT FOR FONT LOAD ===== */
-        await document.fonts.ready;
-
-        /* ===== FORCE DESKTOP VIEW ===== */
-        const originalTransform = element.style.transform;
-        const originalWidth = element.style.width;
-
-        element.style.transform = "none";
-        element.style.width = "1200px";
-
-        /* FORCE BODY WIDTH */
-        document.body.style.width = "1300px";
-        document.body.style.minWidth = "1300px";
-        document.body.style.overflow = "visible";
-
-        /* FIX TABLE STRUCTURE */
-        document.querySelectorAll("table").forEach((tbl) => {
-          tbl.style.tableLayout = "fixed";
-        });
-
-        document.querySelectorAll(".main td, .main th").forEach((cell) => {
-          cell.style.width = cell.offsetWidth + "px";
-        });
-
-        /* ===== CAPTURE ===== */
-        const canvas = await html2canvas(element, {
-          scale: 3,
-          backgroundColor: "#ffffff",
-          useCORS: true,
-        });
-
-        /* ===== RESTORE ===== */
-        element.style.transform = originalTransform;
-        element.style.width = originalWidth;
-
-        document.body.style.width = "";
-        document.body.style.minWidth = "";
-        document.body.style.overflow = "";
-
-        document.querySelectorAll("table").forEach((tbl) => {
-          tbl.style.tableLayout = "";
-        });
-
-        const dataURL = canvas.toDataURL("image/png", 1);
-        const date = span.innerText;
-
-        const link = document.createElement("a");
-        link.download = `Daily_Report_${date}.png`;
-        link.href = dataURL;
-        link.click();
-
-        /* ===== COLLECT TABLE DATA ===== */
-
-        let rows = [];
-
-        document.querySelectorAll("#tbody tr").forEach((row) => {
-          let rowData = {
-            type: row.classList.contains("section") ? "section" : "data",
-            cells: [],
-          };
-
-          Array.from(row.cells).forEach((cell, index) => {
-            let cellText = cell.innerText || "";
-
-            // DESCRIPTION column:
-            // Save only the main description in cells[1].
-            // Bullet items are saved separately in rowData.bullets.
-            if (index === 1 && row.classList.contains("data-row")) {
-              const bullets = Array.isArray(row._bullets) ? row._bullets : [];
-
-              if (bullets.length > 0) {
-                const bulletLines = new Set(
-                  bullets.map((b) => "• " + String(b))
-                );
-
-                cellText = cellText
-                  .split("\n")
-                  .filter((line) => !bulletLines.has(line.trim()))
-                  .join("\n")
-                  .trim();
-              }
-
-              rowData.cells.push(cellText);
-            } else {
-              rowData.cells.push(cellText);
-            }
+      
+        try {
+          /* ===== WAIT FOR FONT LOAD ===== */
+          await document.fonts.ready;
+      
+          /* ===== FORCE DESKTOP VIEW ===== */
+          const originalTransform = element.style.transform;
+          const originalWidth = element.style.width;
+      
+          element.style.transform = "none";
+          element.style.width = "1200px";
+      
+          document.body.style.width = "1300px";
+          document.body.style.minWidth = "1300px";
+          document.body.style.overflow = "visible";
+      
+          /* ===== FIX TABLE STRUCTURE ===== */
+          document.querySelectorAll("table").forEach((tbl) => {
+            tbl.style.tableLayout = "fixed";
           });
-
-          // Keep the bullet array exactly as a separate JSON field.
-          // Old program does not save/display icons.
-          if (row.classList.contains("data-row")) {
-            rowData.bullets = Array.isArray(row._bullets)
-              ? row._bullets.map((b) => String(b))
-              : [];
+      
+          document.querySelectorAll(".main td, .main th").forEach((cell) => {
+            cell.style.width = cell.offsetWidth + "px";
+          });
+      
+          /* ===== CAPTURE IMAGE ===== */
+          const canvas = await html2canvas(element, {
+            scale: 3,
+            backgroundColor: "#ffffff",
+            useCORS: true,
+          });
+      
+          /* ===== RESTORE ===== */
+          element.style.transform = originalTransform;
+          element.style.width = originalWidth;
+      
+          document.body.style.width = "";
+          document.body.style.minWidth = "";
+          document.body.style.overflow = "";
+      
+          document.querySelectorAll("table").forEach((tbl) => {
+            tbl.style.tableLayout = "";
+          });
+      
+          /* ===== DOWNLOAD PNG ===== */
+          const dataURL = canvas.toDataURL("image/png", 1);
+          const date = span.innerText;
+      
+          const link = document.createElement("a");
+          link.download = `Daily_Report_${date}.png`;
+          link.href = dataURL;
+          link.click();
+      
+      
+          /* =========================================================
+             COLLECT TABLE DATA
+             ========================================================= */
+      
+          let rows = [];
+      
+          document.querySelectorAll("#tbody tr").forEach((row) => {
+      
+            const isSection = row.classList.contains("section");
+            const isData = row.classList.contains("data-row");
+      
+            let rowData = {
+              type: isSection ? "section" : "data",
+              cells: []
+            };
+      
+      
+            /* =======================================================
+               COLLECT CELLS
+               ======================================================= */
+      
+            Array.from(row.cells).forEach((cell, index) => {
+      
+              /*
+               * DESCRIPTION COLUMN
+               *
+               * The visible bullet elements are NOT included
+               * in cells[1].
+               *
+               * Only the original/main description is saved.
+               */
+      
+              if (index === 1 && isData) {
+      
+                let description = "";
+      
+                /*
+                 * If the description has the special
+                 * .json-main-description element, use it.
+                 */
+                const mainDescription =
+                  cell.querySelector(".json-main-description");
+      
+                if (mainDescription) {
+      
+                  description = mainDescription.innerText.trim();
+      
+                } else {
+      
+                  /*
+                   * For normal manually entered rows,
+                   * collect text while ignoring bullet elements.
+                   */
+                  const clone = cell.cloneNode(true);
+      
+                  clone
+                    .querySelectorAll(
+                      ".json-bullet-container, .json-bullet-item"
+                    )
+                    .forEach((el) => el.remove());
+      
+                  description = clone.innerText.trim();
+                }
+      
+                rowData.cells.push(description);
+      
+              } else {
+      
+                rowData.cells.push(cell.innerText.trim());
+              }
+            });
+      
+      
+            /* =======================================================
+               BULLETS
+               ======================================================= */
+      
+            if (isData) {
+      
+              /*
+               * First use bullets stored on the row when
+               * the JSON was loaded.
+               */
+              if (Array.isArray(row._bullets)) {
+      
+                rowData.bullets = row._bullets.map((bullet) =>
+                  String(bullet).trim()
+                ).filter(Boolean);
+      
+              } else {
+      
+                rowData.bullets = [];
+              }
+            }
+      
+      
+            /* =======================================================
+               ADD ROW
+               ======================================================= */
+      
+            rows.push(rowData);
+          });
+      
+      
+          /* =========================================================
+             FINAL REPORT JSON
+             ========================================================= */
+      
+          const reportData = {
+            date: date,
+            day: document.getElementById("dayCell").innerText.trim(),
+            rows: rows
+          };
+      
+      
+          console.log("JSON BEING SAVED:");
+          console.log(JSON.stringify(reportData, null, 2));
+      
+      
+          /* =========================================================
+             SAVE JSON TO RENDER → GITHUB
+             ========================================================= */
+      
+          const response = await fetch(
+            "https://daily-report-s9yq.onrender.com/save-report-json",
+            {
+              method: "POST",
+      
+              headers: {
+                "Content-Type": "application/json"
+              },
+      
+              body: JSON.stringify(reportData)
+            }
+          );
+      
+      
+          /* ===== CHECK SERVER RESPONSE ===== */
+      
+          if (!response.ok) {
+            throw new Error(
+              "Server returned HTTP " + response.status
+            );
           }
-
-          rows.push(rowData);
-        });
-
-        /* ===== SAVE JSON TO SERVER ===== */
-
-        await fetch("https://daily-report-s9yq.onrender.com/save-report-json", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(reportData),
-        });
-
-        input.style.display = "inline";
-        span.style.display = "none";
-
-        alert("Report saved locally + backup saved to GitHub JSON");
+      
+          const result = await response.json();
+      
+          console.log("SERVER RESPONSE:");
+          console.log(result);
+      
+      
+          if (
+            result.github_status &&
+            result.github_status >= 200 &&
+            result.github_status < 300
+          ) {
+      
+            alert(
+              "✅ Report saved successfully!\n\n" +
+              "PNG saved locally.\n" +
+              "JSON saved to GitHub."
+            );
+      
+          } else {
+      
+            console.error("GitHub save failed:", result);
+      
+            alert(
+              "⚠️ PNG saved, but JSON was NOT saved to GitHub.\n\n" +
+              "Check Render logs."
+            );
+          }
+      
+        } catch (error) {
+      
+          console.error("SAVE ERROR:", error);
+      
+          alert(
+            "❌ Report JSON save failed.\n\n" +
+            error.message
+          );
+      
+        } finally {
+      
+          input.style.display = "inline";
+          span.style.display = "none";
+        }
       }
       /* ---------- DATE + DAY ---------- */
 
@@ -969,85 +1096,181 @@
       }
 
       async function loadReport(date) {
-        const url = `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/json/${date}.json?cache=${Date.now()}`;
-
+      
+        const url =
+          `https://raw.githubusercontent.com/abhijeetraj22/daily_report_storage/main/json/${date}.json?cache=${Date.now()}`;
+      
         try {
+      
           const res = await fetch(url);
-
-          if (!res.ok) throw new Error();
-
+      
+          if (!res.ok) {
+            throw new Error("JSON file not found");
+          }
+      
           const data = await res.json();
-
-          document.getElementById("dayCell").innerText = data.day;
-
+      
+          document.getElementById("dayCell").innerText =
+            data.day || "";
+      
           const tbody = document.getElementById("tbody");
+      
           tbody.innerHTML = "";
-
+      
+      
           data.rows.forEach((r) => {
-            let tr = document.createElement("tr");
-
+      
+            const tr = document.createElement("tr");
+      
+      
+            /* =====================================================
+               SECTION ROW
+               ===================================================== */
+      
             if (r.type === "section") {
+      
               tr.className = "section";
+      
             } else {
+      
               tr.className = "data-row";
-
-              // Store bullets separately on the row.
-              // Icons from the JSON are intentionally ignored.
+      
+              /*
+               * Store bullets separately.
+               *
+               * ICON IS INTENTIONALLY IGNORED.
+               */
               tr._bullets = Array.isArray(r.bullets)
                 ? r.bullets.map((b) => String(b))
                 : [];
             }
-
+      
+      
+            /* =====================================================
+               CELLS
+               ===================================================== */
+      
             r.cells.forEach((c, index) => {
-              let td = document.createElement("td");
-
+      
+              const td = document.createElement("td");
+      
+      
+              /* ===================================================
+                 DESCRIPTION COLUMN
+                 =================================================== */
+      
               if (index === 1 && r.type === "data") {
-                // Main description only.
-                td.innerText = c;
-
-                // Display bullets from JSON underneath the description.
-                if (Array.isArray(r.bullets) && r.bullets.length > 0) {
-                  const bulletContainer = document.createElement("div");
-
-                  bulletContainer.className = "json-bullet-container";
-                  bulletContainer.style.marginTop = "8px";
-
+      
+                /*
+                 * Main description
+                 */
+                const description =
+                  document.createElement("div");
+      
+                description.className =
+                  "json-main-description";
+      
+                description.innerText =
+                  c || "";
+      
+                td.appendChild(description);
+      
+      
+                /* =================================================
+                   BULLETS
+                   ================================================= */
+      
+                if (
+                  Array.isArray(r.bullets) &&
+                  r.bullets.length > 0
+                ) {
+      
+                  const bulletContainer =
+                    document.createElement("div");
+      
+                  bulletContainer.className =
+                    "json-bullet-container";
+      
+                  bulletContainer.style.marginTop =
+                    "8px";
+      
+      
                   r.bullets.forEach((bulletText) => {
-                    const bullet = document.createElement("div");
-
-                    bullet.className = "json-bullet-item";
-                    bullet.innerText = "• " + String(bulletText);
-                    bullet.style.marginLeft = "10px";
-                    bullet.style.lineHeight = "1.3";
-
+      
+                    const bullet =
+                      document.createElement("div");
+      
+                    bullet.className =
+                      "json-bullet-item";
+      
+                    bullet.innerText =
+                      "• " + String(bulletText);
+      
+                    bullet.style.marginLeft =
+                      "10px";
+      
+                    bullet.style.lineHeight =
+                      "1.3";
+      
                     bulletContainer.appendChild(bullet);
                   });
-
+      
+      
                   td.appendChild(bulletContainer);
                 }
+      
               } else {
-                td.innerText = c;
+      
+                td.innerText = c || "";
               }
-
-              if (index === 0 && r.type === "data") {
+      
+      
+              /* ===================================================
+                 S.NO
+                 =================================================== */
+      
+              if (
+                index === 0 &&
+                r.type === "data"
+              ) {
+      
                 td.classList.add("sno");
               }
-
+      
+      
+              /* ===================================================
+                 EDITABLE
+                 =================================================== */
+      
               if (r.type !== "section") {
-                td.setAttribute("contenteditable", "true");
+      
+                td.setAttribute(
+                  "contenteditable",
+                  "true"
+                );
               }
-
+      
+      
               tr.appendChild(td);
             });
-
+      
+      
             tbody.appendChild(tr);
-
+      
+      
             setTimeout(() => {
               lockSerialNumbers();
             }, 50);
+      
           });
+      
         } catch (err) {
-          console.log("No saved report");
+      
+          console.log(
+            "No saved report:",
+            err
+          );
+      
           resetDefaultTable();
         }
       }
