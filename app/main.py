@@ -1,4 +1,3 @@
-```python
 from fastapi import FastAPI
 from pydantic import BaseModel
 import requests
@@ -784,4 +783,3 @@ def security_status():
         "service":
             "Daily Report OLD Backend"
     }
-```
