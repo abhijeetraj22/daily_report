@@ -6,7 +6,6 @@ import json
 import base64
 from fastapi.middleware.cors import CORSMiddleware
 
-
 # ============================================================
 # FASTAPI APPLICATION
 # ============================================================
@@ -15,7 +14,6 @@ app = FastAPI(
     title="Daily Report OLD Backend",
     version="2.0"
 )
-
 
 # ============================================================
 # CORS
@@ -28,7 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # ============================================================
 # ENVIRONMENT VARIABLES
@@ -45,7 +42,6 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 #
 SECURITY_CODE = os.getenv("SECURITY_CODE")
 
-
 # ============================================================
 # GITHUB CONFIGURATION
 # ============================================================
@@ -53,7 +49,6 @@ SECURITY_CODE = os.getenv("SECURITY_CODE")
 REPO_OWNER = "abhijeetraj22"
 REPO_NAME = "daily_report_storage"
 BRANCH = "main"
-
 
 # ============================================================
 # BASIC HEALTH CHECK
